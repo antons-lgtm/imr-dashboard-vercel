@@ -227,13 +227,14 @@ setInterval(() => {
   reportFrame.src = reportFrame.src;
 }, 10 * 60 * 1000);
 
-// fungsi tampil halo user + logout
+// fungsi tampil halo user & logout terpisah
 function showUserGreeting(user) {
-  const div = document.createElement('div');
-  div.id = 'user-greeting';
-  div.style.cssText = `
+  // Halo user di atas kiri
+  const greetingDiv = document.createElement('div');
+  greetingDiv.id = 'user-greeting';
+  greetingDiv.style.cssText = `
     position: fixed;
-    bottom: 15px;
+    top: 15px;
     left: 14px;
     font-size: 14px;
     color: #333;
@@ -242,23 +243,35 @@ function showUserGreeting(user) {
     padding: 8px 12px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
   `;
-  div.innerHTML = `👋 Halo, ${user} <button id="logoutBtn" style="
-    background: none;
-    border: none;
-    color: #b00;
-    font-size: 13px;
-    cursor: pointer;
-  ">Logout</button>`;
-  document.body.appendChild(div);
+  greetingDiv.textContent = `👋 Halo, ${user}`;
+  document.body.appendChild(greetingDiv);
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
+  // Logout di bawah kiri
+  const logoutDiv = document.createElement('div');
+  logoutDiv.id = 'logout-div';
+  logoutDiv.style.cssText = `
+    position: fixed;
+    bottom: 15px;
+    left: 14px;
+  `;
+  const logoutBtn = document.createElement('button');
+  logoutBtn.textContent = 'Logout';
+  logoutBtn.style.cssText = `
+    background: #b00;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+  `;
+  logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('user');
     location.reload();
   });
+  logoutDiv.appendChild(logoutBtn);
+  document.body.appendChild(logoutDiv);
 }
 </script>
 
