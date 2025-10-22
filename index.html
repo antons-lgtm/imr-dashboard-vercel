@@ -11,6 +11,10 @@ html, body {
   height: 100%;
   font-family: Arial, sans-serif;
   overflow: hidden;
+}
+
+body {
+  display: flex;
   background: #f4f6f8;
 }
 
@@ -175,33 +179,35 @@ const iframeContainer = document.getElementById('iframeContainer');
 const reportFrame = document.getElementById('reportFrame');
 const loginInfo = document.getElementById('loginInfo');
 
-// cek login status
 function isLoggedIn() {
   return !!localStorage.getItem('user');
 }
 
-// fungsi login
-async function login() {
+// kalau sudah login
+if (isLoggedIn()) {
+  loginContainer.style.display = 'none';
+  iframeContainer.style.display = 'block';
+  showUserGreeting(localStorage.getItem('user'));
+}
+
+loginBtn.addEventListener('click', async () => {
   loginInfo.style.display = 'none';
   const username = usernameEl.value.trim();
-  const password = passwordEl.value.trim();
-
+  const password = passwordEl.value;
   if (!username || !password) {
     loginInfo.textContent = 'Masukkan username & password';
     loginInfo.style.display = 'block';
     return;
   }
-
   try {
     const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-
     const data = await res.json();
-    if (data.ok) {
-      localStorage.setItem('user', username); // simpan nama user login
+    if (res.ok && data.ok) {
+      localStorage.setItem('user', data.username);
       location.reload();
     } else {
       loginInfo.textContent = data.msg || 'Login gagal';
@@ -212,46 +218,48 @@ async function login() {
     loginInfo.textContent = 'Terjadi kesalahan koneksi';
     loginInfo.style.display = 'block';
   }
-}
-
-loginBtn.addEventListener('click', login);
-
-// setelah login
-window.addEventListener('DOMContentLoaded', () => {
-  const user = localStorage.getItem('user');
-  if (user) {
-    loginContainer.style.display = 'none';
-    iframeContainer.style.display = 'block';
-
-    // halo user kiri bawah
-    document.body.insertAdjacentHTML('beforeend', `
-      <div id="user-greeting" style="
-        position: fixed;
-        bottom: 15px;
-        left: 14px;
-        font-size: 13px;
-        color: #333;
-        background: rgba(255,255,255,0.85);
-        backdrop-filter: blur(6px);
-        border-radius: 8px;
-        padding: 6px 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        font-weight: 500;
-        z-index: 20;
-      ">
-        👋 Halo, ${user}
-      </div>
-    `);
-  }
 });
 
-// tombol refresh
 document.getElementById('refreshBtn').addEventListener('click', () => {
   reportFrame.src = reportFrame.src;
 });
 setInterval(() => {
   reportFrame.src = reportFrame.src;
 }, 10 * 60 * 1000);
+
+// fungsi tampil halo user + logout
+function showUserGreeting(user) {
+  const div = document.createElement('div');
+  div.id = 'user-greeting';
+  div.style.cssText = `
+    position: fixed;
+    bottom: 15px;
+    left: 14px;
+    font-size: 14px;
+    color: #333;
+    background: rgba(255,255,255,0.9);
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+  div.innerHTML = `👋 Halo, ${user} <button id="logoutBtn" style="
+    background: none;
+    border: none;
+    color: #b00;
+    font-size: 13px;
+    cursor: pointer;
+  ">Logout</button>`;
+  document.body.appendChild(div);
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('user');
+    location.reload();
+  });
+}
 </script>
 
 </body>
