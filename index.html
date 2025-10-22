@@ -11,10 +11,6 @@ html, body {
   height: 100%;
   font-family: Arial, sans-serif;
   overflow: hidden;
-}
-
-body {
-  display: flex;
   background: #f4f6f8;
 }
 
@@ -139,21 +135,6 @@ iframe {
   height: 100%;
   border: none;
 }
-
-/* Halo Admin di kiri bawah */
-.header-info {
-  position: fixed;
-  bottom: 15px;
-  left: 14px;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(6px);
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #333;
-  font-weight: 500;
-  z-index: 20;
-}
 </style>
 </head>
 <body>
@@ -185,8 +166,6 @@ iframe {
   </div>
 </div>
 
-<div class="header-info" id="userInfo" style="display:none;">Halo, Admin 👋</div>
-
 <script>
 const loginBtn = document.getElementById('loginBtn');
 const usernameEl = document.getElementById('username');
@@ -195,39 +174,35 @@ const loginContainer = document.getElementById('loginContainer');
 const iframeContainer = document.getElementById('iframeContainer');
 const reportFrame = document.getElementById('reportFrame');
 const loginInfo = document.getElementById('loginInfo');
-const userInfo = document.getElementById('userInfo');
 
+// cek login status
 function isLoggedIn() {
-  return localStorage.getItem('imr_logged') === '1';
+  return !!localStorage.getItem('user');
 }
 
-if (isLoggedIn()) {
-  loginContainer.style.display = 'none';
-  iframeContainer.style.display = 'block';
-  userInfo.style.display = 'block';
-}
-
-loginBtn.addEventListener('click', async () => {
+// fungsi login
+async function login() {
   loginInfo.style.display = 'none';
   const username = usernameEl.value.trim();
-  const password = passwordEl.value;
+  const password = passwordEl.value.trim();
+
   if (!username || !password) {
     loginInfo.textContent = 'Masukkan username & password';
     loginInfo.style.display = 'block';
     return;
   }
+
   try {
     const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
+
     const data = await res.json();
-    if (res.ok && data.ok) {
-      localStorage.setItem('imr_logged', '1');
-      loginContainer.style.display = 'none';
-      iframeContainer.style.display = 'block';
-      userInfo.style.display = 'block';
+    if (data.ok) {
+      localStorage.setItem('user', username); // simpan nama user login
+      location.reload();
     } else {
       loginInfo.textContent = data.msg || 'Login gagal';
       loginInfo.style.display = 'block';
@@ -237,8 +212,40 @@ loginBtn.addEventListener('click', async () => {
     loginInfo.textContent = 'Terjadi kesalahan koneksi';
     loginInfo.style.display = 'block';
   }
+}
+
+loginBtn.addEventListener('click', login);
+
+// setelah login
+window.addEventListener('DOMContentLoaded', () => {
+  const user = localStorage.getItem('user');
+  if (user) {
+    loginContainer.style.display = 'none';
+    iframeContainer.style.display = 'block';
+
+    // halo user kiri bawah
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="user-greeting" style="
+        position: fixed;
+        bottom: 15px;
+        left: 14px;
+        font-size: 13px;
+        color: #333;
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(6px);
+        border-radius: 8px;
+        padding: 6px 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-weight: 500;
+        z-index: 20;
+      ">
+        👋 Halo, ${user}
+      </div>
+    `);
+  }
 });
 
+// tombol refresh
 document.getElementById('refreshBtn').addEventListener('click', () => {
   reportFrame.src = reportFrame.src;
 });
